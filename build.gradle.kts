@@ -2,9 +2,8 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     id("java-gradle-plugin")
     id("maven-publish")
-    alias(libs.plugins.nexus.publishing)
+    id("com.gradle.plugin-publish") version "0.18.0"
     alias(libs.plugins.kotlin.serialization)
-    id("signing")
 }
 
 description = "License Gradle Plugin"
@@ -53,6 +52,12 @@ java {
     }
 }
 
+pluginBundle {
+    website = "https://github.com/cloudflightio/license-gradle-plugin"
+    vcsUrl = "https://github.com/cloudflightio/license-gradle-plugin.git"
+    tags = listOf("license", "dependencies", "report")
+}
+
 gradlePlugin {
     plugins {
         create("license-gradle-plugin") {
@@ -80,48 +85,4 @@ tasks.withType<Jar>() {
 
     from(layout.projectDirectory.file("LICENSE"))
     from(layout.projectDirectory.file("NOTICE"))
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            pom {
-                name.set(project.name)
-                description.set(project.description)
-                url.set("https://github.com/cloudflightio/license-gradle-plugin")
-                licenses {
-                    license {
-                        name.set("The Apache License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-                inceptionYear.set("2022")
-                organization {
-                    name.set("Cloudflight GmbH")
-                    url.set("https://cloudflight.io")
-                }
-                developers {
-                    developer {
-                        id.set("cloudflight")
-                        name.set("Cloudflight Team")
-                        email.set("opensource@cloudflight.io")
-                    }
-                }
-                scm {
-                    connection.set("scm:ggit@github.com:cloudflightio/license-gradle-plugin.git")
-                    developerConnection.set("scm:git@github.com:cloudflightio/license-gradle-plugin.git")
-                    url.set("https://github.com/cloudflightio/license-gradle-plugin")
-                }
-            }
-        }
-    }
-}
-
-signing {
-    setRequired {
-        System.getenv("PGP_SECRET") != null
-    }
-    useInMemoryPgpKeys(System.getenv("PGP_SECRET"), System.getenv("PGP_PASSPHRASE"))
-    sign(publishing.publications.getByName("maven"))
 }
