@@ -118,17 +118,6 @@ publishing {
     }
 }
 
-nexusPublishing {
-    repositories {
-        sonatype {  //only for users registered in Sonatype after 24 Feb 2021
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            username.set(System.getenv("MAVEN_USERNAME"))
-            password.set(System.getenv("MAVEN_PASSWORD"))
-        }
-    }
-}
-
 signing {
     setRequired {
         System.getenv("PGP_SECRET") != null
