@@ -1,0 +1,9 @@
+plugins {
+    id 'java'
+    id 'io.cloudflight.license-gradle-plugin'
+}
+
+dependencies {
+    implementation project(':sample-api')
+    implementation project(':sample-ui')
+}

@@ -1,0 +1,5 @@
+rootProject.name = 'multi-module'
+
+include 'sample-api'
+include 'sample-ui'
+include 'sample-server'

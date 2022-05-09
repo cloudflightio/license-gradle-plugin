@@ -1,0 +1,34 @@
+[versions]
+kotlin = "1.6.10"
+kotlin-logging = "2.1.21"
+maven-artifact = "3.5.0"
+jupiter = "5.8.1"
+assertj = "3.22.0"
+
+[libraries]
+kotlin-logging = { module = "io.github.microutils:kotlin-logging-jvm", version.ref = "kotlin-logging" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.3.2" }
+kotlinx-html-jvm = { module = "org.jetbrains.kotlinx:kotlinx-html-jvm", version = "0.7.3" }
+maven-artifact = { module = "org.apache.maven:maven-artifact", version.ref = "maven-artifact" }
+
+junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jupiter" }
+junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "jupiter" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "jupiter" }
+
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+
+spdx-catalog = { module = "io.cloudflight.license.spdx:spdx-catalog", version = "3.16.6" }
+json-wrapper = { module = "io.cloudflight.json:json-wrapper", version = "0.3.3" }
+
+gradle-node-plugin = { module = "com.github.node-gradle:gradle-node-plugin", version = "3.2.1" }
+
+httpclient = { module = "org.apache.httpcomponents:httpclient", version = "4.5.12" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin"}
+
+nexus-publishing = { id = "io.github.gradle-nexus.publish-plugin", version = "1.1.0" }
+
+[bundles]
+testImplementationDependencies = ["junit-api", "junit-params", "assertj-core"]

@@ -1,0 +1,9 @@
+plugins {
+    id 'java-library'
+    id 'io.cloudflight.license-gradle-plugin'
+}
+
+dependencies {
+    implementation 'io.cloudflight.json:json-wrapper:0.2.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}

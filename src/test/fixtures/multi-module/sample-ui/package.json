@@ -1,0 +1,21 @@
+{
+  "name": "sample-ui",
+  "description": "Receive my events",
+  "version": "0.0.1-3",
+  "private": true,
+  "dependencies": {
+    "express": "3.0",
+    "redis": "0.7.2",
+    "jade": "0.27.2"
+  },
+  "subdomain": "sg-event-receive",
+  "scripts": {
+    "start": "app.js"
+  },
+  "engines": {
+    "node": "0.6.x"
+  },
+  "bundledDependencies": [
+    "redis"
+  ]
+}
