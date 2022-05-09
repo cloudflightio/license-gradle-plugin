@@ -13,11 +13,6 @@ if (System.getenv("RELEASE") != "true") {
     version = "$version-SNAPSHOT"
 }
 
-if (System.getenv("GRADLE_PUBLISH_KEY") != null) {
-    project.setProperty("gradle.publish.key", System.getenv("GRADLE_PUBLISH_KEY"))
-    project.setProperty("gradle.publish.secret", System.getenv("GRADLE_PUBLISH_SECRET"))
-}
-
 repositories {
     mavenCentral()
     gradlePluginPortal()
