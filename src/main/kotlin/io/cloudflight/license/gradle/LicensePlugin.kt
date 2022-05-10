@@ -1,8 +1,6 @@
 package io.cloudflight.license.gradle
 
-import com.github.gradle.node.NodeExtension
 import com.github.gradle.node.npm.task.NpmInstallTask
-import io.cloudflight.license.gradle.npm.NpmLicenseParser
 import io.cloudflight.license.gradle.task.LicenseReportTask
 import io.cloudflight.license.gradle.tracker.task.CreateTrackerReportTask
 import io.cloudflight.license.gradle.tracker.task.SendToTrackerTask
@@ -30,11 +28,6 @@ class LicensePlugin : Plugin<Project> {
             it.jsonFile.set(licenseDir.get().file("license-report.json"))
             it.setLicenseOverwrites(LicenseDefinitionReader().loadLicenseOverrides(target))
         }
-        LicenseBuildUtils.withTask(target, NpmInstallTask.NAME) { task ->
-            if (reportTask.getPackageLockJson().isPresent) {
-                reportTask.dependsOn(task)
-            }
-        }
 
         val createReportTask = target.tasks.create("clfCreateTrackerReport", CreateTrackerReportTask::class.java) {
             it.group = "cloudflight"
@@ -56,16 +49,14 @@ class LicensePlugin : Plugin<Project> {
                 it.into("META-INF")
             }
 
-        LicenseBuildUtils.withTask(target, NpmInstallTask.NAME) { task ->
-            val node = NodeExtension.get(target)
 
-            val packageFile = NpmLicenseParser.getPackageJsonFile(node)
-            if (packageFile.exists()) {
-                reportTask.dependsOn(task)
-            }
-        }
 
         target.afterEvaluate {
+            val npmInstallTask = it.tasks.findByName(NpmInstallTask.NAME)
+            if (npmInstallTask != null && reportTask.getPackageLockJson().isPresent) {
+                reportTask.dependsOn(npmInstallTask)
+            }
+
             GradleUtils.findRuntimeProjectDependencies(it).forEach { dp ->
                 LicenseBuildUtils.withTask(dp, reportTask.name) {
                     val reportTaskOfDependency = dp.tasks.findByName(reportTask.name)
