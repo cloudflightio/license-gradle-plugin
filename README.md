@@ -1,6 +1,7 @@
 # License Gradle Plugin
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
+![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.cloudflight.license-gradle-plugin?label=Gradle%20Plugin%20Portal)
 
 This plugin is another approach to track your dependencies including their licenses.
 
@@ -16,7 +17,14 @@ We provide support for:
 
 ## Installation
 
-TBD after publishing at the Gradle Plugin Portal
+You can apply that plugin via the [Gradle Plugin Portal](https://plugins.gradle.org/plugin/io.cloudflight.license-gradle-plugin)
+by adding the following block to your `build.gradle.kts`:
+
+````kotlin
+plugins {
+    id("io.cloudflight.license-gradle-plugin") version "1.0.3"
+}
+````
 
 ## Usage 
 
