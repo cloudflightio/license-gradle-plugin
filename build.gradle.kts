@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("io.cloudflight.autoconfigure-gradle") version "0.4.0"
     id("java-gradle-plugin")
     id("maven-publish")
     id("com.gradle.plugin-publish") version "0.18.0"
@@ -11,6 +11,13 @@ group = "io.cloudflight.license.gradle"
 
 if (System.getenv("RELEASE") != "true") {
     version = "$version-SNAPSHOT"
+}
+
+autoConfigure {
+    java {
+        languageVersion.set(JavaLanguageVersion.of(8))
+        vendorName.set("Cloudflight")
+    }
 }
 
 repositories {
@@ -40,16 +47,11 @@ tasks.compileTestKotlin.configure {
 }
 
 tasks.test {
-    useJUnitPlatform()
     inputs.dir(layout.projectDirectory.dir("./src/test/fixtures"))
 }
 
 java {
-    withSourcesJar()
     withJavadocJar()
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(8))
-    }
 }
 
 pluginBundle {
@@ -70,19 +72,6 @@ gradlePlugin {
 }
 
 tasks.withType<Jar>() {
-    manifest {
-        val compiler  = javaToolchains.compilerFor(java.toolchain).get().metadata
-        val createdBy = compiler.javaRuntimeVersion + " (" + compiler.vendor + ")"
-        val vendorName: String by project.extra
-
-        attributes(
-            "Created-By" to createdBy,
-            "Implementation-Vendor" to vendorName,
-            "Implementation-Title" to project.name,
-            "Implementation-Version" to project.version,
-        )
-    }
-
     from(layout.projectDirectory.file("LICENSE"))
     from(layout.projectDirectory.file("NOTICE"))
 }

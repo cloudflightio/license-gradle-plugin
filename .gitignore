@@ -175,5 +175,7 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij,java,kotlin,gradle
 
+node_modules
+
 .idea/vcs.xml
 .idea/.name
