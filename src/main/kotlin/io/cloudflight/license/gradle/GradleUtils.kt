@@ -12,9 +12,13 @@ object GradleUtils {
     }
 
     fun hasLicenseFile(file: File): Boolean {
-        val zip = ZipFile(file)
-        val entry = zip.getEntry("META-INF/NOTICE.html")
-        return entry != null
+        return if (file.exists()) {
+            val zip = ZipFile(file)
+            val entry = zip.getEntry("META-INF/NOTICE.html")
+            entry != null
+        } else {
+            false
+        }
     }
 }
 
