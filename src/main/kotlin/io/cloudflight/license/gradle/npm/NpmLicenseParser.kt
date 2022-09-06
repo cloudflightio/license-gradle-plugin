@@ -41,10 +41,10 @@ class NpmLicenseParser {
                                     )
                                 )
                             }
-                        } else {
+                        } else if (!it.value.optional) {
                             LOG.warn("$npmPackage does not exist, license can't be parsed")
                         }
-                    } else {
+                    } else if (!it.value.optional) {
                         LOG.error("${npmModuleDirectory.absoluteFile} does not exist, license can't be parsed")
                     }
                 } catch (ex: Exception) {

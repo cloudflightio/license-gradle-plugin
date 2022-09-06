@@ -61,7 +61,8 @@ class LicensePluginTest {
 
             println(result.normalizedOutput)
 
-            val dependenciesOfUi = Report.readFromFile(this.fixtureDir.resolve("sample-ui/build/tracker/dependencies.json").toFile())
+            val dependenciesOfUi =
+                Report.readFromFile(this.fixtureDir.resolve("sample-ui/build/tracker/dependencies.json").toFile())
 
             assertThat(dependenciesOfUi.compile).isNotEmpty
 
@@ -79,7 +80,7 @@ class LicensePluginTest {
                 assertThat(nodeModules.toFile().deleteRecursively()).isTrue
             }
 
-            val result = run("clean",":sample-server:clfLicenseReport")
+            val result = run("clean", ":sample-server:clfLicenseReport")
             println(result.normalizedOutput)
             assertThat(result.task(":sample-server:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":sample-ui:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
@@ -99,7 +100,28 @@ class LicensePluginTest {
             assertThat(result2.task(":sample-api:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
             assertThat(result2.task(":sample-server:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
         }
+
+    @Test
+    fun `multi-module build npm run trackerReport`(): Unit =
+        licenseFixture("multi-module") {
+            val nodeModules = fixtureDir.resolve("sample-ui/node_modules")
+            if (nodeModules.exists()) {
+                assertThat(nodeModules.toFile().deleteRecursively()).isTrue
+            }
+
+            val result = run("clean", "clfCreateTrackerReport")
+            println(result.normalizedOutput)
+            assertThat(result.normalizedOutput).doesNotContain("license can't be parsed")
+            assertThat(result.task(":sample-server:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":sample-ui:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":sample-ui:clfCreateTrackerReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":sample-ui:npmInstall")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":sample-api:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        }
 }
+
+
+
 
 private fun <T : Any> licenseFixture(
     fixtureName: String,

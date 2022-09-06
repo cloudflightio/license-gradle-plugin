@@ -18,7 +18,7 @@ junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref 
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 
 spdx-catalog = { module = "io.cloudflight.license.spdx:spdx-catalog", version = "3.16.6" }
-json-wrapper = { module = "io.cloudflight.json:json-wrapper", version = "0.3.3" }
+json-wrapper = { module = "io.cloudflight.json:json-wrapper", version = "0.3.5" }
 
 gradle-node-plugin = { module = "com.github.node-gradle:gradle-node-plugin", version = "3.2.1" }
 
