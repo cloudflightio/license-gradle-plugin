@@ -34,6 +34,7 @@ public final class NpmPackageParser {
                         "npm",
                         getTrail(entry, npmPackageFile, npmPackageLock)
                 );
+                // TODO exclude optional dependencies if they have not been resolved (i.e. they are not inside the node_modules folder)
                 if (entry.getValue().getDev()) {
                     dependencies.getDevelopment().add(a);
                 } else {
