@@ -4,7 +4,6 @@ import com.github.gradle.node.NodeExtension
 import io.cloudflight.jsonwrapper.license.LicenseEntry
 import io.cloudflight.jsonwrapper.license.LicenseRecord
 import io.cloudflight.jsonwrapper.npm.NpmPackage
-import io.cloudflight.jsonwrapper.npm.NpmPackageLock
 import io.cloudflight.jsonwrapper.npm.NpmUtils
 import io.cloudflight.license.gradle.Licenses
 import org.gradle.api.artifacts.ModuleVersionIdentifier
@@ -15,12 +14,11 @@ class NpmLicenseParser {
     @Suppress("NestedBlockDepth")
     fun findNpmPackages(packageLockFile: File): Collection<LicenseRecord> {
         val projects = mutableListOf<LicenseRecord>()
-        val packageLock = NpmPackageLock.readFromFile(packageLockFile)
-        packageLock.dependencies.entries.forEach {
+        val packageLock = NpmPackageLockUtils(packageLockFile)
+        packageLock.getDependencies().entries.forEach {
             if (!it.value.dev) {
                 try {
-                    val moduleName = it.key
-                    val npmModuleDirectory = File(packageLockFile.parentFile, "$NODE_MODULES/$moduleName")
+                    val npmModuleDirectory: File = packageLock.getNpmModuleDirectory(it)
                     if (npmModuleDirectory.exists()) {
                         val npmPackage = File(npmModuleDirectory, PACKAGE_JSON)
                         if (npmPackage.exists()) {
@@ -83,7 +81,7 @@ class NpmLicenseParser {
     }
 
     companion object {
-        private const val NODE_MODULES = "node_modules"
+        internal const val NODE_MODULES = "node_modules"
         const val PACKAGE_LOCK_JSON = "package-lock.json"
         const val PACKAGE_JSON = "package.json"
 

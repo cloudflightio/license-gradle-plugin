@@ -2,9 +2,9 @@ package io.cloudflight.license.gradle.tracker.model.npm;
 
 import io.cloudflight.jsonwrapper.npm.NpmDependency;
 import io.cloudflight.jsonwrapper.npm.NpmPackage;
-import io.cloudflight.jsonwrapper.npm.NpmPackageLock;
 import io.cloudflight.jsonwrapper.npm.NpmUtils;
 import io.cloudflight.jsonwrapper.tracker.Artifact;
+import io.cloudflight.license.gradle.npm.NpmPackageLockUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,22 +23,23 @@ public final class NpmPackageParser {
      */
     public NpmModuleDependencies parseNpmModule(File packageJson, File packageJsonLock) throws IOException {
         NpmPackage npmPackageFile = NpmPackage.Companion.readFromFile(packageJson);
-        NpmPackageLock npmPackageLock = NpmPackageLock.Companion.readFromFile(packageJsonLock);
+        NpmPackageLockUtils npmPackageLockUtils = new NpmPackageLockUtils(packageJsonLock);
 
         try {
             NpmModuleDependencies dependencies = new NpmModuleDependencies();
-            for (Map.Entry<String, NpmDependency> entry : npmPackageLock.getDependencies().entrySet()) {
+            for (Map.Entry<String, NpmDependency> entry : npmPackageLockUtils.getDependencies().entrySet()) {
                 Artifact a = new Artifact(
                         NpmUtils.INSTANCE.getGavForNpmEntry(entry),
                         null,
                         "npm",
-                        getTrail(entry, npmPackageFile, npmPackageLock)
+                        getTrail(entry, npmPackageFile, npmPackageLockUtils)
                 );
-                // TODO exclude optional dependencies if they have not been resolved (i.e. they are not inside the node_modules folder)
-                if (entry.getValue().getDev()) {
-                    dependencies.getDevelopment().add(a);
-                } else {
-                    dependencies.getCompile().add(a);
+                if (!entry.getValue().getOptional() || npmPackageLockUtils.getNpmModuleDirectory(entry).exists()) {
+                    if (entry.getValue().getDev()) {
+                        dependencies.getDevelopment().add(a);
+                    } else {
+                        dependencies.getCompile().add(a);
+                    }
                 }
             }
 
@@ -48,22 +49,22 @@ public final class NpmPackageParser {
         }
     }
 
-    private List<String> getTrail(Map.Entry<String, NpmDependency> entry, NpmPackage npmPackageFile, NpmPackageLock npmPackageLock) {
+    private List<String> getTrail(Map.Entry<String, NpmDependency> entry, NpmPackage npmPackageFile, NpmPackageLockUtils npmPackageLock) {
         if (entry.getValue().getDev()) {
-            return getTrail(npmPackageFile.getDevDependencies().keySet(), npmPackageFile, npmPackageLock, entry.getKey());
+            return getTrail(npmPackageFile.getDevDependencies().keySet(), npmPackageLock, entry.getKey());
         } else {
-            return getTrail(npmPackageFile.getDependencies().keySet(), npmPackageFile, npmPackageLock, entry.getKey());
+            return getTrail(npmPackageFile.getDependencies().keySet(), npmPackageLock, entry.getKey());
         }
     }
 
-    private List<String> getTrail(Set<String> nonTransitiveDependencies, NpmPackage npmPackageJson, NpmPackageLock npmPackageLock, String module) {
+    private List<String> getTrail(Set<String> nonTransitiveDependencies, NpmPackageLockUtils npmPackageLock, String module) {
         if (nonTransitiveDependencies.contains(module)) {
             return null;
         }
         return collectTrail(new ArrayList<>(), module, nonTransitiveDependencies, npmPackageLock);
     }
 
-    private List<String> collectTrail(List<String> trail, String module, Set<String> possiblePaths, NpmPackageLock npmPackageLock) {
+    private List<String> collectTrail(List<String> trail, String module, Set<String> possiblePaths, NpmPackageLockUtils npmPackageLock) {
         if (possiblePaths.contains(module)) {
             return trail;
         }

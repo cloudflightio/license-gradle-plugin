@@ -8,7 +8,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.exists
 
@@ -117,10 +116,13 @@ class LicensePluginTest {
             assertThat(result.task(":sample-ui:clfCreateTrackerReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":sample-ui:npmInstall")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":sample-api:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+            val dependencies =
+                Report.readFromFile(fixtureDir.resolve("sample-ui/build/tracker/dependencies.json").toFile())
+            assertThat(dependencies.development.find { it.artifact.contains("@colors:colors") }).isNotNull
+            assertThat(dependencies.development.find { it.artifact.contains("@npm:fsevents") }).isNull()
         }
 }
-
-
 
 
 private fun <T : Any> licenseFixture(
