@@ -71,6 +71,12 @@ abstract class CreateTrackerReportTask : DefaultTask() {
         report.provided = collectDependencies(project.configurations, JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME)
         report.test = collectDependencies(project.configurations, JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME)
 
+        project.configurations.names.filter { it.lowercase().endsWith(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME.lowercase())
+                && it != JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME && it != JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME }
+            .forEach { namedTestSuite ->
+                report.test += collectDependencies(project.configurations, namedTestSuite)
+            }
+
         val developmentArtifacts = mutableListOf<Artifact>()
         developmentArtifacts.addAll(
             collectDependencies(project.configurations, JavaPlugin.ANNOTATION_PROCESSOR_CONFIGURATION_NAME) +
@@ -107,7 +113,7 @@ abstract class CreateTrackerReportTask : DefaultTask() {
         val packageJson = getPackageJson()
         val packageLockJson = getPackageLockJson()
 
-        if (packageJson.isPresent && packageJson.get().asFile.exists() && packageLockJson.isPresent && packageJson.get().asFile.exists()) {
+        if (packageJson.isPresent && packageJson.get().asFile.exists() && packageLockJson.isPresent && packageLockJson.get().asFile.exists()) {
             try {
                 val parser = NpmPackageParser()
                 val npmModuleDependencies =
