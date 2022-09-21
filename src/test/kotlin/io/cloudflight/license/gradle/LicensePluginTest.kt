@@ -122,6 +122,21 @@ class LicensePluginTest {
             assertThat(dependencies.development.find { it.artifact.contains("@colors:colors") }).isNotNull
             assertThat(dependencies.development.find { it.artifact.contains("@npm:fsevents") }).isNull()
         }
+
+    @Test
+    fun `test-suite dependencies are collected correctly`(): Unit =
+        licenseFixture("single-suite-module") {
+            val result = run("clean", "clfCreateTrackerReport")
+            println(result.normalizedOutput)
+            assertThat(result.normalizedOutput).doesNotContain("license can't be parsed")
+            assertThat(result.task(":clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":clfCreateTrackerReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+            val dependencies =
+                Report.readFromFile(fixtureDir.resolve("build/tracker/dependencies.json").toFile())
+            assertThat(dependencies.test.find { it.artifact.contains("org.assertj:assertj-core") }).isNotNull
+            assertThat(dependencies.test.find { it.artifact.contains("io.cloudflight.json:json-wrapper") }).isNotNull
+        }
 }
 
 
