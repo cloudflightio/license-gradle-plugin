@@ -11,25 +11,19 @@ import io.cloudflight.license.gradle.npm.NpmLicenseParser
 import io.cloudflight.license.gradle.tracker.model.npm.NpmPackageParser
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToStream
-import org.gradle.api.Action
 import org.gradle.api.DefaultTask
-import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.attributes.Category
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.plugins.JvmTestSuitePlugin
-import org.gradle.api.plugins.jvm.JvmTestSuite
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.testing.base.TestingExtension
 import java.io.File
 
 abstract class CreateTrackerReportTask : DefaultTask() {
