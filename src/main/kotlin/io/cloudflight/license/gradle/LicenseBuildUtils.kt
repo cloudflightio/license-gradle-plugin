@@ -31,11 +31,21 @@ object LicenseBuildUtils {
             }
         }
 
-        val component = project.components.getByName("java") as AdhocComponentWithVariants
-        component.addVariantsFromConfiguration(configuration) {
-            it.mapToMavenScope("runtime")
-            it.mapToOptional()
-        }
+        if (project.components.names.contains("java")) {
+            // If the project is based on Java
+            val component = project.components.getByName("java") as AdhocComponentWithVariants
+            component.addVariantsFromConfiguration(configuration) {
+                it.mapToMavenScope("runtime")
+                it.mapToOptional()
+            }
+        } else if (project.components.names.contains("release_apk")) {
+            // If the project is based on Android
+            val component = project.components.getByName("release_apk") as AdhocComponentWithVariants
+            component.addVariantsFromConfiguration(configuration) {
+                it.mapToMavenScope("runtime")
+                it.mapToOptional()
+            }
+        } // else do nothing
 
         return configuration
     }

@@ -8,15 +8,10 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.internal.artifacts.dsl.dependencies.DependencyFactory
 import org.gradle.api.internal.project.ProjectInternal
-import org.gradle.api.plugins.JavaLibraryPlugin
-import org.gradle.api.plugins.JavaPlugin
-import org.gradle.language.jvm.tasks.ProcessResources
 
 class LicensePlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
-        target.plugins.apply(JavaLibraryPlugin::class.java)
-
         // TODO replace this static reference to something much better
         Licenses.dependencyFactory = (target as ProjectInternal).services.get(DependencyFactory::class.java)
 
@@ -44,12 +39,10 @@ class LicensePlugin : Plugin<Project> {
             }
         }
 
-        target.tasks.named(JavaPlugin.PROCESS_RESOURCES_TASK_NAME, ProcessResources::class.java).get()
+        /*target.tasks.named(JavaPlugin.PROCESS_RESOURCES_TASK_NAME, ProcessResources::class.java).get()
             .from(reportTask.htmlFile) {
                 it.into("META-INF")
-            }
-
-
+            }*/
 
         target.afterEvaluate {
             val npmInstallTask = it.tasks.findByName(NpmInstallTask.NAME)

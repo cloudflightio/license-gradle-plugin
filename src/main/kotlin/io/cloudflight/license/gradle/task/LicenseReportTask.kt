@@ -18,7 +18,6 @@ import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.Optional
@@ -304,7 +303,7 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
 
     private fun findRuntimeDependencies() = project
         .configurations
-        .getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+        .getByName(GradleUtils.getRuntimeClasspathName(project))
         .resolvedConfiguration
         .lenientConfiguration
         .artifacts
