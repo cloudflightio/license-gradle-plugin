@@ -1,7 +1,6 @@
 package io.cloudflight.license.gradle
 
 import org.gradle.api.Project
-import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.plugins.JavaPlugin
 import java.io.File
