@@ -4,7 +4,6 @@ plugins {
     id("maven-publish")
     id("com.gradle.plugin-publish") version "0.18.0"
     alias(libs.plugins.kotlin.serialization)
-    id("java-library")
 }
 
 description = "License Gradle Plugin"
