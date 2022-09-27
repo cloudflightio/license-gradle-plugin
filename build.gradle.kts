@@ -15,7 +15,7 @@ if (System.getenv("RELEASE") != "true") {
 
 autoConfigure {
     java {
-        languageVersion.set(JavaLanguageVersion.of(8))
+        languageVersion.set(JavaLanguageVersion.of(11))
         vendorName.set("Cloudflight")
     }
 }
