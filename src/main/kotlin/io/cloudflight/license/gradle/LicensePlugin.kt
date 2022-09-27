@@ -11,6 +11,7 @@ import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.Copy
 import org.gradle.language.jvm.tasks.ProcessResources
+import java.io.File
 
 class LicensePlugin : Plugin<Project> {
 
@@ -42,21 +43,6 @@ class LicensePlugin : Plugin<Project> {
             }
         }
 
-        if (target.tasks.names.contains(JavaPlugin.PROCESS_RESOURCES_TASK_NAME)) {
-            target.tasks.named(JavaPlugin.PROCESS_RESOURCES_TASK_NAME, ProcessResources::class.java).get()
-                .from(reportTask.htmlFile) {
-                    it.into("META-INF")
-                }
-        } else {
-            // Even though the processReleaseResources Task on Android exists, it does not have a Copy functionality
-            //   like the Java equivalent 'processResources'
-            // A Copy class can only be created by a Gradle-API and not directly.
-            target.tasks.create("copyTask",Copy::class.java).from(reportTask.htmlFile) {
-                it.into("META-INF")
-            }
-            target.tasks.named("copyTask").get().enabled = false
-        }
-
         target.afterEvaluate {proj ->
             val npmInstallTask = proj.tasks.findByName(NpmInstallTask.NAME)
             if (npmInstallTask != null && reportTask.getPackageLockJson().isPresent) {
@@ -81,6 +67,24 @@ class LicensePlugin : Plugin<Project> {
 
             configuration.outgoing {
                 it.artifact(licenses)
+            }
+
+            if (target.tasks.names.contains(JavaPlugin.PROCESS_RESOURCES_TASK_NAME)) {
+                target.tasks.named(JavaPlugin.PROCESS_RESOURCES_TASK_NAME, ProcessResources::class.java).get()
+                    .from(reportTask.htmlFile) {
+                        it.into("META-INF")
+                    }
+            } else {
+                // Even though the processReleaseResources Task on Android exists, it does not have a Copy functionality
+                //   like the Java equivalent 'processResources'. Also, its destDir is not set.
+                // A Copy class can only be created by a Gradle-API and not directly.
+                val copyTask = proj.tasks.create("copyTask",Copy::class.java)
+                copyTask.destinationDir = File(target.buildDir.absolutePath + "\\resources")
+                copyTask.from(reportTask.htmlFile) {
+                    it.into("META-INF")
+                }
+                // this task is only available after evaluation
+                proj.tasks.named("processReleaseResources").get().finalizedBy(copyTask)
             }
         }
     }
