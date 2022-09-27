@@ -1,6 +1,5 @@
 package io.cloudflight.license.gradle
 
-import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.github.gradle.node.npm.task.NpmInstallTask
 import io.cloudflight.license.gradle.task.LicenseReportTask
 import io.cloudflight.license.gradle.tracker.task.CreateTrackerReportTask
