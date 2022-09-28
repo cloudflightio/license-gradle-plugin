@@ -137,6 +137,23 @@ class LicensePluginTest {
             assertThat(dependencies.test.find { it.artifact.contains("org.assertj:assertj-core") }).isNotNull
             assertThat(dependencies.test.find { it.artifact.contains("io.cloudflight.json:json-wrapper") }).isNotNull
         }
+
+    @Test
+    fun `android-module build`():Unit = licenseFixture("android-module") {
+        val result = runCleanBuild()
+        assertThat(result.task(":app:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        assertThat(result.normalizedOutput).doesNotContain("Execution optimizations have been disabled for task")
+
+        val dependenciesOfApp =
+            Report.readFromFile(this.fixtureDir.resolve("app/build/tracker/dependencies.json").toFile())
+
+        assertThat(dependenciesOfApp.compile).isNotEmpty
+        assertThat(dependenciesOfApp.compile.find { it.artifact.contains("org.assertj:assertj-core") }).isNotNull
+
+        val result2 = runBuild()
+        assertThat(result2.normalizedOutput).doesNotContain("Execution optimizations have been disabled for task")
+    }
 }
 
 

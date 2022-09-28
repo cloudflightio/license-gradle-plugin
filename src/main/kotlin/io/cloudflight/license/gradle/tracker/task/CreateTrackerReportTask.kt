@@ -7,6 +7,7 @@ import io.cloudflight.jsonwrapper.tracker.Artifact
 import io.cloudflight.jsonwrapper.tracker.BuildTool
 import io.cloudflight.jsonwrapper.tracker.Project
 import io.cloudflight.jsonwrapper.tracker.Report
+import io.cloudflight.license.gradle.GradleUtils
 import io.cloudflight.license.gradle.npm.NpmLicenseParser
 import io.cloudflight.license.gradle.tracker.model.npm.NpmPackageParser
 import kotlinx.serialization.json.Json
@@ -61,23 +62,23 @@ abstract class CreateTrackerReportTask : DefaultTask() {
         report.project = toTrackerProject(project)
 
         val compileArtifacts = mutableListOf<Artifact>()
+        val developmentArtifacts = mutableListOf<Artifact>()
+
         compileArtifacts.addAll(
             collectDependencies(
                 project.configurations,
-                JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME
+                GradleUtils.getCompileClasspathName(project)
             )
         )
-        report.runtime = collectDependencies(project.configurations, JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
-        report.provided = collectDependencies(project.configurations, JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME)
-        report.test = collectDependencies(project.configurations, JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+        report.runtime = collectDependencies(project.configurations, GradleUtils.getRuntimeClasspathName(project))
+        report.provided = collectDependencies(project.configurations, GradleUtils.getCompileOnlyName(project))
+        report.test = collectDependencies(project.configurations, GradleUtils.getTestRuntimeClasspathName(project))
 
-        project.configurations.names.filter { it.lowercase().endsWith(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME.lowercase())
-                && it != JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME && it != JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME }
-            .forEach { namedTestSuite ->
-                report.test += collectDependencies(project.configurations, namedTestSuite)
-            }
+        // named Test-Suite support
+        GradleUtils.getOtherTestRuntimeNames(project).forEach { namedTestSuite ->
+            report.test += collectDependencies(project.configurations, namedTestSuite)
+        }
 
-        val developmentArtifacts = mutableListOf<Artifact>()
         developmentArtifacts.addAll(
             collectDependencies(project.configurations, JavaPlugin.ANNOTATION_PROCESSOR_CONFIGURATION_NAME) +
                     createArtifact("org.gradle:gradle:" + project.gradle.gradleVersion, "sdk")
