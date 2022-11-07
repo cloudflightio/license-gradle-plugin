@@ -179,3 +179,4 @@ node_modules
 
 .idea/vcs.xml
 .idea/.name
+.idea/kotlinc.xml
