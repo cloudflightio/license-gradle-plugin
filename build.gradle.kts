@@ -1,5 +1,4 @@
 plugins {
-    id("io.cloudflight.autoconfigure-gradle") version "0.6.5"
     id("java-gradle-plugin")
     id("maven-publish")
     id("com.gradle.plugin-publish") version "0.18.0"
@@ -8,10 +7,6 @@ plugins {
 
 description = "License Gradle Plugin"
 group = "io.cloudflight.license.gradle"
-
-if (System.getenv("RELEASE") != "true") {
-    version = "$version-SNAPSHOT"
-}
 
 autoConfigure {
     java {
@@ -27,7 +22,6 @@ repositories {
 
 dependencies {
     implementation(libs.maven.artifact)
-    implementation(libs.kotlin.logging)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.html.jvm)
     implementation(libs.spdx.catalog)
@@ -40,18 +34,10 @@ dependencies {
     testRuntimeOnly(libs.junit.engine)
 }
 
-tasks.compileTestKotlin.configure {
+tasks.compileKotlin.configure {
     kotlinOptions {
-        freeCompilerArgs += "-opt-in=kotlin.io.path.ExperimentalPathApi"
+        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlinx.serialization.ExperimentalSerializationApi"
     }
-}
-
-tasks.test {
-    inputs.dir(layout.projectDirectory.dir("./src/test/fixtures"))
-}
-
-java {
-    withJavadocJar()
 }
 
 pluginBundle {
