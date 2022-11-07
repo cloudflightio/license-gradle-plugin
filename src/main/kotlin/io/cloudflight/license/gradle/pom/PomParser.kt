@@ -17,7 +17,7 @@ interface PomFileResolver {
 
 }
 
-class PomParser(private val pomFileResolver: PomFileResolver) {
+internal class PomParser(private val pomFileResolver: PomFileResolver) {
 
     private val xmlParser = XmlParser(false, false)
 
@@ -38,6 +38,7 @@ class PomParser(private val pomFileResolver: PomFileResolver) {
     ) {
 
         val name = node.getName()
+        val groupId = node.getGroupId()
         val artifactId = node.getArtifactId()
         val description = node.getDescription()
         val url = node.getUrl()
@@ -69,13 +70,23 @@ class PomParser(private val pomFileResolver: PomFileResolver) {
             return licenses
         }
 
+        private fun extractDeveloperName(node:Node):String? {
+            if (node.getName().isNotBlank()) {
+                return node.getName()
+            }
+            if (node.getOrganizationName().text().isNotBlank()) {
+                return node.getOrganizationName().text()
+            }
+            return null
+        }
+
         fun findDevelopers(): Set<String> {
             val developers = mutableSetOf<String>()
 
             developers += node
                 .getDevelopers()
                 .map { it as Node }
-                .map { it.getName() }
+                .mapNotNull { extractDeveloperName(it) }
 
             val parent = getParentNode(identifier, findParent())
 
@@ -98,6 +109,46 @@ class PomParser(private val pomFileResolver: PomFileResolver) {
 
             return ""
         }
+
+        fun findGroupId(): String {
+            val groupId = node.getGroupId()
+            if (groupId.isNotEmpty()) return groupId
+
+            val parent = getParentNode(identifier, findParent())
+
+            if (parent != null) {
+                return parent.findGroupId()
+            }
+
+            return ""
+        }
+
+        fun findDescription(): String {
+            val description = node.getDescription()
+            if (description.isNotEmpty()) return description
+
+            val parent = getParentNode(identifier, findParent())
+
+            if (parent != null) {
+                return parent.findDescription()
+            }
+
+            return ""
+        }
+
+        fun findUrl(): String {
+            val url = node.getUrl()
+            if (url.isNotEmpty()) return url
+
+            val parent = getParentNode(identifier, findParent())
+
+            if (parent != null) {
+                return parent.findUrl()
+            }
+
+            return ""
+        }
+
 
         private fun findParent(): ModuleVersionIdentifier? {
             val parents = node
