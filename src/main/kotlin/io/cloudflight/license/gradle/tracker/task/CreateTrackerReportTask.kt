@@ -62,7 +62,6 @@ abstract class CreateTrackerReportTask : DefaultTask() {
         report.project = toTrackerProject(project)
 
         val compileArtifacts = mutableListOf<Artifact>()
-        val developmentArtifacts = mutableListOf<Artifact>()
 
         compileArtifacts.addAll(
             collectDependencies(
@@ -79,6 +78,7 @@ abstract class CreateTrackerReportTask : DefaultTask() {
             report.test += collectDependencies(project.configurations, namedTestSuite)
         }
 
+        val developmentArtifacts = mutableListOf<Artifact>()
         developmentArtifacts.addAll(
             collectDependencies(project.configurations, JavaPlugin.ANNOTATION_PROCESSOR_CONFIGURATION_NAME) +
                     createArtifact("org.gradle:gradle:" + project.gradle.gradleVersion, "sdk")
@@ -92,20 +92,15 @@ abstract class CreateTrackerReportTask : DefaultTask() {
             report.licenseRecords = LicenseRecord.readFromStream(licenseFile.get().asFile.inputStream())
         }
 
+        project.buildscript.configurations.forEach { buildConf ->
+            developmentArtifacts.addAll(collectDependencies(project.buildscript.configurations, buildConf.name))
+        }
+
         val teamcityDslVersion = System.getenv("CLOUDFLIGHT_TEAMCITY_DSL")
         if (teamcityDslVersion != null && teamcityDslVersion.length > 0) {
             developmentArtifacts.add(
                 createArtifact(
                     "io.cloudflight.devops.teamcity:teamcity-dsl:" + teamcityDslVersion,
-                    "jar"
-                )
-            )
-        }
-        val cloudflightGradlePluginVersion = getCloudflightGradlePluginVersion()
-        if (cloudflightGradlePluginVersion != null) {
-            developmentArtifacts.add(
-                createArtifact(
-                    "io.cloudflight.gradle:cloudflight-gradle-plugin:" + cloudflightGradlePluginVersion,
                     "jar"
                 )
             )
@@ -130,15 +125,6 @@ abstract class CreateTrackerReportTask : DefaultTask() {
 
         outputFile.get().asFile.outputStream().use {
             json.encodeToStream(report, it)
-        }
-    }
-
-    private fun getCloudflightGradlePluginVersion(): String? {
-        try {
-            val clazz = Class.forName("io.cloudflight.gradle.CloudflightPlugin")
-            return clazz.`package`.implementationVersion
-        } catch (ignored: ClassNotFoundException) {
-            return null
         }
     }
 
