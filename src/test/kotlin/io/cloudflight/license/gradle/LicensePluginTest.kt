@@ -41,6 +41,21 @@ class LicensePluginTest {
         }
 
     @Test
+    fun `broken POM files are repaired and parents are being considered`(): Unit =
+        licenseFixture("single-java-module") {
+            run("clean", "clfLicenseReport")
+            val licenseReport = fixtureDir.resolve("build/licenses/license-report.json")
+            assertThat(licenseReport).exists()
+            val licenseRecords = LicenceRecordReader.readFromFile(licenseReport.toFile())
+            assertThat(licenseRecords).isNotEmpty
+            val brotli = licenseRecords.first { it.dependency == "org.brotli:dec:0.1.2" }
+            assertThat(brotli.project).isEqualTo("org.brotli:dec")
+            assertThat(brotli.version).isEqualTo("0.1.2")
+            assertThat(brotli.url).isEqualTo("http://brotli.org")
+            assertThat(brotli.description).isEqualTo("Brotli is a generic-purpose lossless compression algorithm.")
+        }
+
+    @Test
     @Disabled
     fun `clfLicenseReport is not created when the module is not a java module`(): Unit =
         licenseFixture("single-empty-module") {

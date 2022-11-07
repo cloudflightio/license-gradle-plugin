@@ -222,9 +222,9 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
                 LicenseRecord(
                     dependency = it.moduleVersion.toString(),
                     version = node.findVersion(),
-                    project = if (name.isNotEmpty()) name else node.artifactId,
-                    description = node.description,
-                    url = node.url,
+                    project = if (name.isNotEmpty() && !name.contains("\${project.groupId}")) name else (node.findGroupId() + ":" + node.artifactId),
+                    description = node.findDescription(),
+                    url = node.findUrl(),
                     year = node.inceptionYear,
                     licenses = licenses.toList(),
                     developers = developers.toList()
