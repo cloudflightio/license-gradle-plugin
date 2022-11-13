@@ -26,7 +26,7 @@ class LicensePluginTest {
     @Test
     fun `clfLicenseReport is called with clean build`(): Unit =
         licenseFixture("single-java-module") {
-            val result = runCleanBuild()
+            val result = run("clean", "build", "clfCreateTrackerReport")
             assertThat(result.task(":clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
         }
 
@@ -66,7 +66,7 @@ class LicensePluginTest {
     @Test
     fun `multi-module build`(): Unit =
         licenseFixture("multi-module") {
-            val result = runCleanBuild()
+            val result = run("clean", "build", "clfCreateTrackerReport")
             assertThat(result.task(":sample-ui:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":sample-api:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":sample-server:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)

@@ -92,9 +92,8 @@ abstract class CreateTrackerReportTask : DefaultTask() {
             report.licenseRecords = LicenseRecord.readFromStream(licenseFile.get().asFile.inputStream())
         }
 
-        project.buildscript.configurations.forEach { buildConf ->
-            developmentArtifacts.addAll(collectDependencies(project.buildscript.configurations, buildConf.name))
-        }
+        addDependenciesFromBuildscript(project, developmentArtifacts)
+        // TODO we need to access the settings.buildScript as well
 
         val teamcityDslVersion = System.getenv("CLOUDFLIGHT_TEAMCITY_DSL")
         if (teamcityDslVersion != null && teamcityDslVersion.length > 0) {
@@ -126,6 +125,21 @@ abstract class CreateTrackerReportTask : DefaultTask() {
         outputFile.get().asFile.outputStream().use {
             json.encodeToStream(report, it)
         }
+    }
+
+    private fun addDependenciesFromBuildscript(
+        project: org.gradle.api.Project,
+        developmentArtifacts: MutableList<Artifact>
+    ) {
+        project.buildscript.configurations.forEach { buildConf ->
+            developmentArtifacts.addAll(
+                collectDependencies(
+                    project.buildscript.configurations,
+                    buildConf.name
+                ).filter { developmentArtifacts.find { a -> a.artifact == it.artifact } == null })
+        }
+
+        project.parent?.let { parent -> addDependenciesFromBuildscript(parent, developmentArtifacts) }
     }
 
     private fun createArtifact(artifact: String, type: String): Artifact {
