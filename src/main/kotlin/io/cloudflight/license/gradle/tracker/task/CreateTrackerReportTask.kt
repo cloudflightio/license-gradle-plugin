@@ -95,6 +95,17 @@ abstract class CreateTrackerReportTask : DefaultTask() {
         addDependenciesFromBuildscript(project, developmentArtifacts)
         // TODO we need to access the settings.buildScript as well
 
+        // TODO make that configurable from outside, or have better scanning of the BuildScript - we need this here as the CloudflightPlugin sometimes is just applied to the root project (where we don't have sources)
+        val cloudflightGradlePluginVersion = getCloudflightGradlePluginVersion()
+        if (cloudflightGradlePluginVersion != null) {
+            developmentArtifacts.add(
+                createArtifact(
+                    "io.cloudflight.gradle:cloudflight-gradle-plugin:" + cloudflightGradlePluginVersion,
+                    "jar"
+                )
+            )
+        }
+
         val teamcityDslVersion = System.getenv("CLOUDFLIGHT_TEAMCITY_DSL")
         if (teamcityDslVersion != null && teamcityDslVersion.length > 0) {
             developmentArtifacts.add(
@@ -140,6 +151,15 @@ abstract class CreateTrackerReportTask : DefaultTask() {
         }
 
         project.parent?.let { parent -> addDependenciesFromBuildscript(parent, developmentArtifacts) }
+    }
+
+    private fun getCloudflightGradlePluginVersion(): String? {
+        try {
+            val clazz = Class.forName("io.cloudflight.gradle.CloudflightPlugin")
+            return clazz.`package`.implementationVersion
+        } catch (ignored: ClassNotFoundException) {
+            return null
+        }
     }
 
     private fun createArtifact(artifact: String, type: String): Artifact {
