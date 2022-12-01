@@ -1,7 +1,5 @@
 package io.cloudflight.license.gradle
 
-import io.cloudflight.license.gradle.Licenses
-import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -11,7 +9,7 @@ class LicensesTest {
     /**
      * The identifier is only used for logging in production ans is not relevant here in these tests
      */
-    private var identifier = DefaultModuleVersionIdentifier.newId("io.cloudflight", "gradle", "1.0")
+    private var identifier = "io.cloudflight:gradle:1.0"
 
     @Test
     fun `MIT license with url`() {

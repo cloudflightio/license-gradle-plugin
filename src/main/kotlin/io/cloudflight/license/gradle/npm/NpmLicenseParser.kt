@@ -6,7 +6,6 @@ import io.cloudflight.jsonwrapper.license.LicenseRecord
 import io.cloudflight.jsonwrapper.npm.NpmPackage
 import io.cloudflight.jsonwrapper.npm.NpmUtils
 import io.cloudflight.license.gradle.Licenses
-import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.logging.Logging
 import java.io.File
 
@@ -24,21 +23,18 @@ class NpmLicenseParser {
                         if (npmPackage.exists()) {
                             val p = NpmPackage.readFromFile(npmPackage)
                             val gav = NpmUtils.getGavForNpmEntry(it)
-                            val id = Licenses.parseModuleVersionIdentifier(gav)
-                            if (id != null) {
-                                projects.add(
-                                    LicenseRecord(
-                                        project = p.name,
-                                        version = p.version,
-                                        url = p.homepage ?: "",
-                                        description = p.description ?: "",
-                                        licenses = findLicense(p, id),
-                                        developers = findDevelopersForNpm(p),
-                                        dependency = gav,
-                                        year = null
-                                    )
+                            projects.add(
+                                LicenseRecord(
+                                    project = p.name,
+                                    version = p.version,
+                                    url = p.homepage ?: "",
+                                    description = p.description ?: "",
+                                    licenses = findLicense(p, gav),
+                                    developers = findDevelopersForNpm(p),
+                                    dependency = gav,
+                                    year = null
                                 )
-                            }
+                            )
                         } else if (!it.value.optional) {
                             LOG.warn("$npmPackage does not exist, license can't be parsed")
                         }
@@ -64,13 +60,13 @@ class NpmLicenseParser {
         return devs
     }
 
-    private fun findLicense(npmPackage: NpmPackage, id: ModuleVersionIdentifier): List<LicenseEntry> {
+    private fun findLicense(npmPackage: NpmPackage, artifact: String): List<LicenseEntry> {
         return if (npmPackage.license == null) {
             emptyList()
         } else {
             listOf(
                 Licenses.license(
-                    id,
+                    artifact,
                     npmPackage.license!!,
                     // package.json does not have license urls, and most of them are using the MIT license
                     // which we need to map manually here. the others are mapped in Licenses.kt

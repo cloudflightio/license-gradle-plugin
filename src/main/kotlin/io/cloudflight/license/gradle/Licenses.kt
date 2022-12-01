@@ -3,9 +3,6 @@ package io.cloudflight.license.gradle
 import io.cloudflight.jsonwrapper.license.LicenseEntry
 import io.cloudflight.license.spdx.LicenseQuery
 import io.cloudflight.license.spdx.SpdxLicenses
-import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
-import org.gradle.api.internal.artifacts.dsl.dependencies.DependencyFactory
 import org.gradle.api.logging.Logging
 
 object Licenses {
@@ -19,19 +16,17 @@ object Licenses {
     const val BSD = "BSD"
     private const val MIT = "MIT"
 
-    lateinit var dependencyFactory: DependencyFactory
-
-    internal fun logMissingLicense(identifier: ModuleVersionIdentifier) {
+    internal fun logMissingLicense(identifier: String) {
         LOG_MISSING.error("'$identifier' does not provide any license information.")
     }
 
-    internal fun logMissingUrl(identifier: ModuleVersionIdentifier, name: String, url: String?) {
-        LOG_MISSING.error("'$identifier' does not provide a valid license URL ($url) for '$name'.")
+    internal fun logMissingUrl(artifact: String, name: String, url: String?) {
+        LOG_MISSING.error("'$artifact' does not provide a valid license URL ($url) for '$name'.")
     }
 
-    internal fun logMultipleLicenses(identifier: ModuleVersionIdentifier, licenses: Set<LicenseEntry>) {
+    internal fun logMultipleLicenses(artifact: String, licenses: Set<LicenseEntry>) {
         LOG_MULTIPLE.error(
-            "'$identifier' provides ambiguous licenses, choose the appropriate one:\n        ${
+            "'$artifact' provides ambiguous licenses, choose the appropriate one:\n        ${
                 licenses.joinToString("\n        ") { it.nameWithSpdxCode() }
             }"
         )
@@ -45,27 +40,12 @@ object Licenses {
         }
     }
 
-    internal fun logUnknownLicense(identifier: ModuleVersionIdentifier, name: String, url: String?) {
+    internal fun logUnknownLicense(identifier: String, name: String, url: String?) {
         LOG_UNKNOWN.error("'$identifier' provides unknown license information. '$name' ($url) needs to be verified.")
     }
 
-    internal fun parseModuleVersionIdentifier(dependency: String): ModuleVersionIdentifier? {
-        val identifier = dependencyFactory.createDependency(dependency)
-        val groupId = identifier.group
-        if (groupId == null) {
-            LOG_UNKNOWN.error("GroupId of $dependency cannot be extracted")
-            return null
-        }
-        val version = identifier.version
-        if (version == null) {
-            LOG_UNKNOWN.error("Version of $dependency cannot be extracted")
-            return null
-        }
-        return DefaultModuleVersionIdentifier.newId(groupId, identifier.name, version)
-    }
-
     internal fun license(
-        identifier: ModuleVersionIdentifier,
+        artifact: String,
         name: String,
         url: String?,
         logUnknownLicense: Boolean = false
@@ -83,7 +63,7 @@ object Licenses {
             } else if (!url.isNullOrBlank()) {
                 return LicenseEntry(spdxLicense.name, spdxLicense.licenseId, sanitizeUrl(url))
             } else {
-                logMissingUrl(identifier, name, url)
+                logMissingUrl(artifact, name, url)
                 return LicenseEntry(spdxLicense.name, spdxLicense.licenseId, "")
             }
         }
@@ -96,7 +76,7 @@ object Licenses {
             }
         }
 
-        if (logUnknownLicense) logUnknownLicense(identifier, name, url)
+        if (logUnknownLicense) logUnknownLicense(artifact, name, url)
         return LicenseEntry(name, null, url ?: "")
     }
 
