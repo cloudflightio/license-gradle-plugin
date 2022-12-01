@@ -6,8 +6,6 @@ import io.cloudflight.license.gradle.tracker.task.CreateTrackerReportTask
 import io.cloudflight.license.gradle.tracker.task.SendToTrackerTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.internal.artifacts.dsl.dependencies.DependencyFactory
-import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.Copy
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -16,9 +14,6 @@ import java.io.File
 class LicensePlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
-        // TODO replace this static reference to something much better
-        Licenses.dependencyFactory = (target as ProjectInternal).services.get(DependencyFactory::class.java)
-
         val licenseDir = target.layout.buildDirectory.dir("licenses")
         val reportTask = target.tasks.create("clfLicenseReport", LicenseReportTask::class.java) {
             it.group = "cloudflight"
@@ -43,7 +38,7 @@ class LicensePlugin : Plugin<Project> {
             }
         }
 
-        target.afterEvaluate {proj ->
+        target.afterEvaluate { proj ->
             val npmInstallTask = proj.tasks.findByName(NpmInstallTask.NAME)
             if (npmInstallTask != null && reportTask.getPackageLockJson().isPresent) {
                 reportTask.dependsOn(npmInstallTask)
@@ -78,7 +73,7 @@ class LicensePlugin : Plugin<Project> {
                 // Even though the processReleaseResources Task on Android exists, it does not have a Copy functionality
                 //   like the Java equivalent 'processResources'. Also, its destDir is not set.
                 // A Copy class can only be created by a Gradle-API and not directly.
-                val copyTask = proj.tasks.create("copyTask",Copy::class.java)
+                val copyTask = proj.tasks.create("copyTask", Copy::class.java)
                 copyTask.destinationDir = File(target.buildDir.absolutePath + "\\resources")
                 copyTask.from(reportTask.htmlFile) {
                     it.into("META-INF")

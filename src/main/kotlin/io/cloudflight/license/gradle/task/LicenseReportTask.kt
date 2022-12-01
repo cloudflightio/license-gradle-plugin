@@ -35,7 +35,7 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
     private val pomParser = PomParser(object : PomFileResolver {
         override fun resolve(identifier: ModuleVersionIdentifier): File? {
             val parent =
-                resolveCompanionArtifacts(mutableMapOf(identifier to File(".")), null, POM_TYPE, true).firstOrNull()
+                resolveCompanionArtifacts(mutableMapOf(identifier.toString() to File(".")), null, POM_TYPE, true).firstOrNull()
             return parent?.file
         }
     })
@@ -73,7 +73,7 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
         }
     }
 
-    private var knownLicenses = mapOf<ModuleVersionIdentifier, LicenseEntry>()
+    private var knownLicenses = mapOf<String, LicenseEntry>()
 
     @TaskAction
     fun licenseReport() {
@@ -100,37 +100,34 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
     }
 
     fun setLicenseOverwrites(value: List<LicenseDefinition>) {
-        val map = mutableMapOf<ModuleVersionIdentifier, LicenseEntry>()
+        val map = mutableMapOf<String, LicenseEntry>()
         value.forEach {
-            val identifier = Licenses.parseModuleVersionIdentifier(it.artifact)
-            if (identifier != null) {
                 if (it.licenseId != null) {
                     val spdxLicense = SpdxLicenses.findById(it.licenseId)
                     if (spdxLicense != null) {
-                        map[identifier] = Licenses.license(identifier, spdxLicense.name, null)
+                        map[it.artifact] = Licenses.license(it.artifact, spdxLicense.name, null)
                     } else {
                         LOG.error("The licenseId ${it.licenseId} is unknown")
                     }
                 } else if (it.license != null && it.licenseUrl != null) {
                     // in case of a custom license directly from the build.gradle of a project, we do not want to log that error again
                     // TODO really?
-                    map[identifier] = Licenses.license(identifier, it.license, it.licenseUrl, logUnknownLicense = false)
+                    map[it.artifact] = Licenses.license(it.artifact, it.license, it.licenseUrl, logUnknownLicense = false)
                 } else {
                     LOG.error("Custom license definitions need to either have an id or a name and an URL")
                 }
-            }
         }
         knownLicenses = map.toMap()
     }
 
-    private fun logUnresolvedDependencies(dependencies: MutableMap<ModuleVersionIdentifier, File>) {
+    private fun logUnresolvedDependencies(dependencies: MutableMap<String, File>) {
         dependencies.forEach { Licenses.logMissingLicense(it.key) }
     }
 
     private fun findLicenseReports(
-        dependencyArtifacts: MutableMap<ModuleVersionIdentifier, File>
+        dependencyArtifacts: MutableMap<String, File>
     ): Collection<LicenseRecord> {
-        val licenseRecords = mutableMapOf<ModuleVersionIdentifier, LicenseRecord>()
+        val licenseRecords = mutableMapOf<String, LicenseRecord>()
 
         val dependenciesWithLicenses = dependencyArtifacts
             .filter { GradleUtils.hasLicenseFile(it.value) }
@@ -140,11 +137,8 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
                 try {
                     LicenceRecordReader.readFromFile(artifact.file)
                         .forEach { record ->
-                            val identifier = Licenses.parseModuleVersionIdentifier(record.dependency)
-                            if (identifier != null) {
-                                licenseRecords[identifier] = record
-                                dependencyArtifacts.remove(identifier)
-                            }
+                                licenseRecords[record.dependency] = record
+                                dependencyArtifacts.remove(record.dependency)
                         }
                 } catch (ex: Exception) {
                     LOG.debug("Could not parse ${artifact.file.absolutePath} from ${artifact.id.displayName}, transitive license information cannot be fetched")
@@ -154,8 +148,8 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
         return licenseRecords.values
     }
 
-    private fun findRuntimeProjects(dependencies: MutableMap<ModuleVersionIdentifier, File>): Collection<LicenseRecord> {
-        val licenseRecords = mutableMapOf<ModuleVersionIdentifier, LicenseRecord>()
+    private fun findRuntimeProjects(dependencies: MutableMap<String, File>): Collection<LicenseRecord> {
+        val licenseRecords = mutableMapOf<String, LicenseRecord>()
 
         val projectDependencies = project.findRuntimeProjectDependencies()
         projectDependencies.forEach {
@@ -166,12 +160,9 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
             if (jsonReport.exists()) {
                 LicenceRecordReader.readFromFile(jsonReport)
                     .forEach { record ->
-                        val identifier = Licenses.parseModuleVersionIdentifier(record.dependency)
-                        if (identifier != null) {
-                            licenseRecords[identifier] =
-                                record // TODO only if it is part of dependencies or it is an npm dependency
-                            dependencies.remove(identifier)
-                        }
+                            // TODO only if it is part of dependencies or it is an npm dependency
+                            licenseRecords[record.dependency] =record
+                            dependencies.remove(record.dependency)
                     }
             }
         }
@@ -180,7 +171,7 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
     }
 
     private fun resolveCompanionArtifacts(
-        dependencies: MutableMap<ModuleVersionIdentifier, File>,
+        dependencies: MutableMap<String, File>,
         classifier: String?,
         type: String,
         removeResults: Boolean
@@ -200,13 +191,13 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
         project.configurations.remove(configuration)
 
         if (removeResults) {
-            artifacts.map { it.moduleVersion.id }.forEach { dependencies.remove(it) }
+            artifacts.map { it.moduleVersion.id }.forEach { dependencies.remove(it.toString()) }
         }
 
         return artifacts
     }
 
-    private fun findPomFiles(dependencies: MutableMap<ModuleVersionIdentifier, File>): List<LicenseRecord> {
+    private fun findPomFiles(dependencies: MutableMap<String, File>): List<LicenseRecord> {
         val artifacts = resolveCompanionArtifacts(dependencies, null, POM_TYPE, true)
 
         return artifacts
@@ -217,7 +208,7 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
 
                 val name = node.name
                 val developers = node.findDevelopers()
-                val licenses: Set<LicenseEntry> = extractLicenses(identifier, node)
+                val licenses: Set<LicenseEntry> = extractLicenses(identifier.toString(), node)
 
                 LicenseRecord(
                     dependency = it.moduleVersion.toString(),
@@ -233,7 +224,7 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
             .sortedBy { it.project }
     }
 
-    private fun extractLicenses(identifier: ModuleVersionIdentifier, node: PomParser.PomFile): Set<LicenseEntry> {
+    private fun extractLicenses(identifier: String, node: PomParser.PomFile): Set<LicenseEntry> {
         val license = knownLicenses[identifier]
         if (license != null) {
             return setOf(license)
@@ -278,16 +269,16 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
      *
      * Problem here might be that this will make it impossible to override license entries from transitive files
      */
-    private fun findUnresolvedLicenseOverrides(dependencies: MutableMap<ModuleVersionIdentifier, File>): Collection<LicenseRecord> {
+    private fun findUnresolvedLicenseOverrides(dependencies: MutableMap<String, File>): Collection<LicenseRecord> {
         val records = mutableSetOf<LicenseRecord>()
         dependencies.toMap().forEach {
             if (knownLicenses.containsKey(it.key)) {
                 val entry = knownLicenses.getValue(it.key)
                 records.add(
                     LicenseRecord(
-                        dependency = it.key.toString(),
-                        version = it.key.version,
-                        project = it.key.module.toString(),
+                        dependency = it.key,
+                        version = it.key.substringAfterLast(':'),
+                        project = it.key.split(':')[1],
                         description = null,
                         url = null,
                         year = null,
@@ -310,6 +301,7 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
         .filter { it.moduleVersion.id.group != project.group }
         .associateBy { it.moduleVersion.id }
         .mapValues { it.value.file }
+        .mapKeys { it.key.toString() }
         .toMutableMap()
 
     private fun createHtmlReport(records: List<LicenseRecord>) {

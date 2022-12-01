@@ -5,9 +5,9 @@ import groovy.util.Node
 import groovy.xml.XmlParser
 import io.cloudflight.jsonwrapper.license.LicenseEntry
 import io.cloudflight.license.gradle.Licenses
+import org.gradle.api.artifacts.ModuleIdentifier
 import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.ResolvedArtifact
-import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.logging.Logging
 import java.io.File
 
@@ -59,7 +59,7 @@ internal class PomParser(private val pomFileResolver: PomFileResolver) {
             licenses += node
                 .getLicenses()
                 .map { it as Node }
-                .map { Licenses.license(identifier, it.getName(), it.getUrl()) }
+                .map { Licenses.license(identifier.toString(), it.getName(), it.getUrl()) }
 
             val parent = getParentNode(identifier, findParent())
 
@@ -70,7 +70,7 @@ internal class PomParser(private val pomFileResolver: PomFileResolver) {
             return licenses
         }
 
-        private fun extractDeveloperName(node:Node):String? {
+        private fun extractDeveloperName(node: Node): String? {
             if (node.getName().isNotBlank()) {
                 return node.getName()
             }
@@ -149,13 +149,12 @@ internal class PomParser(private val pomFileResolver: PomFileResolver) {
             return ""
         }
 
-
         private fun findParent(): ModuleVersionIdentifier? {
             val parents = node
                 .getParent()
                 .map {
                     val parent = it as Node
-                    DefaultModuleVersionIdentifier.newId(
+                    InternalModuleVersionIdentifier(
                         parent.getGroupId(),
                         parent.getArtifactId(),
                         parent.getVersion()
@@ -209,6 +208,41 @@ internal class PomParser(private val pomFileResolver: PomFileResolver) {
 
         companion object {
             private val LOG = Logging.getLogger(PomFile::class.java)
+        }
+
+        private data class InternalModuleVersionIdentifier(
+            private val moduleGroup: String,
+            private val moduleName: String,
+            private val moduleVersion: String
+        ) : ModuleVersionIdentifier {
+
+            override fun getGroup(): String {
+                return this.moduleGroup
+            }
+
+            override fun getVersion(): String {
+                return this.moduleVersion
+            }
+
+            override fun getName(): String {
+                return this.moduleName
+            }
+
+            override fun getModule(): ModuleIdentifier {
+                return object : ModuleIdentifier {
+                    override fun getGroup(): String {
+                        return moduleGroup
+                    }
+
+                    override fun getName(): String {
+                        return moduleName
+                    }
+                }
+            }
+
+            override fun toString(): String {
+                return "$moduleGroup:$moduleName:$moduleVersion"
+            }
         }
     }
 
