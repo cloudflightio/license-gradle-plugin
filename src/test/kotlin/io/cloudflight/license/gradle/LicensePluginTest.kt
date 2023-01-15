@@ -187,6 +187,34 @@ class LicensePluginTest {
                 .anyMatch { d -> d.artifact.contains("micronaut-test-resources-client") }
                 .anyMatch { d -> d.artifact.contains("springboot-testresources-jdbc-mariadb") }
         }
+
+    @Test
+    fun `parse npm projects`(): Unit =
+        licenseFixture("single-ts-module") {
+            val result = run("clfCreateTrackerReport")
+            println(result.normalizedOutput)
+
+            val dependenciesOfApp =
+                Report.readFromFile(this.fixtureDir.resolve("build/tracker/dependencies.json").toFile())
+
+            assertThat(dependenciesOfApp.compile)
+                .anyMatch { d -> d.artifact.contains("@angular:common:14.0.2") }
+        }
+
+    @Test
+    fun `parse yarn projects`(): Unit =
+        licenseFixture("single-ts-module-yarn") {
+            val result = run("yarn", "clfLicenseReport","clfCreateTrackerReport")
+
+            assertThat(this.fixtureDir.resolve("package-lock.json")).doesNotExist()
+            println(result.normalizedOutput)
+
+            val dependenciesOfApp =
+                Report.readFromFile(this.fixtureDir.resolve("build/tracker/dependencies.json").toFile())
+
+            assertThat(dependenciesOfApp.compile)
+                .anyMatch { d -> d.artifact.contains("@angular:common:14.2.10") }
+        }
 }
 
 

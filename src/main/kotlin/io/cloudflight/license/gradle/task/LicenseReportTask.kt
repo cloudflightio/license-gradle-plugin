@@ -8,6 +8,7 @@ import io.cloudflight.license.gradle.npm.NpmLicenseParser
 import io.cloudflight.license.gradle.pom.PomFileResolver
 import io.cloudflight.license.gradle.pom.PomParser
 import io.cloudflight.license.gradle.report.HtmlReport
+import io.cloudflight.license.gradle.tracker.model.yarn.YarnPackageParser
 import io.cloudflight.license.spdx.SpdxLicenses
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToStream
@@ -67,7 +68,29 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
     fun getPackageLockJson(): Provider<RegularFile> {
         val node = project.extensions.findByType(NodeExtension::class.java)
         return if (node != null) {
-            node.nodeProjectDir.file(NpmLicenseParser.PACKAGE_LOCK_JSON)
+            node.nodeProjectDir.file(NpmLicenseParser.PACKAGE_LOCK_JSON).takeIf { it.get().asFile.exists() }?:project.provider { null }
+        } else {
+            project.provider { null }
+        }
+    }
+
+    @InputFile
+    @Optional
+    fun getPackageJson(): Provider<RegularFile> {
+        val node = project.extensions.findByType(NodeExtension::class.java)
+        return if (node != null) {
+            node.nodeProjectDir.file(NpmLicenseParser.PACKAGE_JSON).takeIf { it.get().asFile.exists() }?:project.provider { null }
+        } else {
+            project.provider { null }
+        }
+    }
+
+    @InputFile
+    @Optional
+    fun getYarnLock(): Provider<RegularFile> {
+        val node = project.extensions.findByType(NodeExtension::class.java)
+        return if (node != null) {
+            node.nodeProjectDir.file("yarn.lock").takeIf { it.get().asFile.exists() }?:project.provider { null }
         } else {
             project.provider { null }
         }
@@ -86,6 +109,9 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
         records += findPomFiles(dependencies)
         if (getPackageLockJson().isPresent && getPackageLockJson().get().asFile.exists()) {
             records += npmLicenseParser.findNpmPackages(getPackageLockJson().get().asFile)
+        }
+        if (getYarnLock().isPresent && getYarnLock().get().asFile.exists()) {
+            records += YarnPackageParser.findNpmPackages(getPackageJson().get().asFile, getYarnLock().get().asFile)
         }
 
         records += findUnresolvedLicenseOverrides(dependencies)

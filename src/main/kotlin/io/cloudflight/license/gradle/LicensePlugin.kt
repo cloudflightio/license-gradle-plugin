@@ -1,6 +1,7 @@
 package io.cloudflight.license.gradle
 
 import com.github.gradle.node.npm.task.NpmInstallTask
+import com.github.gradle.node.yarn.task.YarnInstallTask
 import io.cloudflight.license.gradle.task.LicenseReportTask
 import io.cloudflight.license.gradle.tracker.task.CreateTrackerReportTask
 import io.cloudflight.license.gradle.tracker.task.SendToTrackerTask
@@ -42,6 +43,11 @@ class LicensePlugin : Plugin<Project> {
             val npmInstallTask = proj.tasks.findByName(NpmInstallTask.NAME)
             if (npmInstallTask != null && reportTask.getPackageLockJson().isPresent) {
                 reportTask.dependsOn(npmInstallTask)
+            }
+
+            val yarnInstallTask = proj.tasks.findByName(YarnInstallTask.NAME)
+            if (yarnInstallTask != null && reportTask.getYarnLock().isPresent) {
+                reportTask.dependsOn(yarnInstallTask)
             }
 
             GradleUtils.findRuntimeProjectDependencies(proj).forEach { dp ->
