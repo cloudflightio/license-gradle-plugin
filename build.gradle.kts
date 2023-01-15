@@ -61,3 +61,10 @@ tasks.withType<Jar>() {
     from(layout.projectDirectory.file("LICENSE"))
     from(layout.projectDirectory.file("NOTICE"))
 }
+
+tasks.withType<Test> {
+    // we wanna set the java Launcher to 17 here in order to be able set higher java compatibility
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    })
+}
