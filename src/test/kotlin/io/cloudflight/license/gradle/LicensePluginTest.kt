@@ -169,6 +169,21 @@ class LicensePluginTest {
         val result2 = runBuild()
         assertThat(result2.normalizedOutput).doesNotContain("Execution optimizations have been disabled for task")
     }
+
+    @Test
+    fun `developmentOnly configurations are handled correctly`(): Unit =
+        licenseFixture("micronaut-test-resources-spring") {
+            val result = run("clean", "build", "bootJar", "clfLicenseReport", "clfCreateTrackerReport")
+            println(result.normalizedOutput)
+
+            val dependenciesOfApp =
+                Report.readFromFile(this.fixtureDir.resolve("build/tracker/dependencies.json").toFile())
+
+            assertThat(dependenciesOfApp.runtime).noneMatch { d -> d.artifact.contains("micronaut") }
+            assertThat(dependenciesOfApp.development)
+                .anyMatch { d -> d.artifact.contains("micronaut-test-resources-client") }
+                .anyMatch { d -> d.artifact.contains("springboot-testresources-jdbc-mariadb") }
+        }
 }
 
 

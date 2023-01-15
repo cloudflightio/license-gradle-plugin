@@ -84,6 +84,12 @@ abstract class CreateTrackerReportTask : DefaultTask() {
                     createArtifact("org.gradle:gradle:" + project.gradle.gradleVersion, "sdk")
         )
 
+        // comes from the Spring Boot Plugin
+        developmentArtifacts.addAll(collectDependencies(project.configurations, "developmentOnly"))
+
+        // comes from the Micronaut Test Resources Plugin
+        developmentArtifacts.addAll(collectDependencies(project.configurations, "testResourcesRuntimeClasspath"))
+
         val cleanCodeReport = File(File(project.buildDir, "cleancode"), "cleancode-report.json")
         if (cleanCodeReport.exists()) {
             report.cleanCodeReport = CleanCodeReport.readFromFile(cleanCodeReport)

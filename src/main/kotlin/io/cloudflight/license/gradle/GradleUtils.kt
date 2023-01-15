@@ -7,6 +7,14 @@ import java.io.File
 import java.util.zip.ZipFile
 
 object GradleUtils {
+
+    /**
+     * Spring Boot creates an own configuration on top of runtimeClassPath where all developmentOnly configurations are removed
+     *
+     * https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/htmlsingle/#reacting-to-other-plugins.java
+     */
+    private const val SPRING_BOOT_RUNTIME_CLASSPATH = "productionRuntimeClasspath"
+
     fun findRuntimeProjectDependencies(project: Project): List<Project> {
         return project.findRuntimeProjectDependencies()
     }
@@ -26,6 +34,9 @@ object GradleUtils {
             "releaseRuntimeClasspath"
             // currently, the following is still skipped:
             //   - debugRuntimeClasspath
+        } else if (project.configurations.names.contains(SPRING_BOOT_RUNTIME_CLASSPATH)) {
+            // https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/htmlsingle/#reacting-to-other-plugins.java
+            SPRING_BOOT_RUNTIME_CLASSPATH
         } else {
             JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME
         }
