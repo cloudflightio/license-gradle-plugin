@@ -1,0 +1,7 @@
+plugins {
+    id 'io.cloudflight.license-gradle-plugin'
+    id "java"
+    id "com.github.node-gradle.node" version "3.5.1"
+}
+
+version = "1.1.1"

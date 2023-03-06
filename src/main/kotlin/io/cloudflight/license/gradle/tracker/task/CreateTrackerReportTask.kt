@@ -10,6 +10,7 @@ import io.cloudflight.jsonwrapper.tracker.Report
 import io.cloudflight.license.gradle.GradleUtils
 import io.cloudflight.license.gradle.npm.NpmLicenseParser
 import io.cloudflight.license.gradle.tracker.model.npm.NpmPackageParser
+import io.cloudflight.license.gradle.tracker.model.yarn.YarnPackageParser
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToStream
 import org.gradle.api.DefaultTask
@@ -41,7 +42,15 @@ abstract class CreateTrackerReportTask : DefaultTask() {
     @Optional
     fun getPackageLockJson(): Provider<RegularFile> {
         val node = project.extensions.findByType(NodeExtension::class.java)
-        return node?.nodeProjectDir?.file(NpmLicenseParser.PACKAGE_LOCK_JSON) ?: project.provider { null }
+        return node?.nodeProjectDir?.file(NpmLicenseParser.PACKAGE_LOCK_JSON)?.takeIf { it.get().asFile.exists() }
+            ?: project.provider { null }
+    }
+
+    @InputFile
+    @Optional
+    fun getYarnLock(): Provider<RegularFile> {
+        val node = project.extensions.findByType(NodeExtension::class.java)
+        return node?.nodeProjectDir?.file("yarn.lock")?.takeIf { it.get().asFile.exists() } ?: project.provider { null }
     }
 
     @InputFile
@@ -124,6 +133,7 @@ abstract class CreateTrackerReportTask : DefaultTask() {
 
         val packageJson = getPackageJson()
         val packageLockJson = getPackageLockJson()
+        val yarnLock = getYarnLock()
 
         if (packageJson.isPresent && packageJson.get().asFile.exists() && packageLockJson.isPresent && packageLockJson.get().asFile.exists()) {
             try {
@@ -134,6 +144,15 @@ abstract class CreateTrackerReportTask : DefaultTask() {
                 developmentArtifacts.addAll(npmModuleDependencies.development)
             } catch (ex: Exception) {
                 project.logger.error("Error at parsing npm modules", ex)
+            }
+        } else if (packageJson.isPresent && packageJson.get().asFile.exists() && yarnLock.isPresent && yarnLock.get().asFile.exists()) {
+            try {
+                val npmModuleDependencies =
+                    YarnPackageParser.parseNpmModule(packageJson.get().asFile, yarnLock.get().asFile)
+                compileArtifacts.addAll(npmModuleDependencies.compile)
+                developmentArtifacts.addAll(npmModuleDependencies.development)
+            } catch (ex: Exception) {
+                project.logger.error("Error at parsing yarn modules", ex)
             }
         }
         report.compile = compileArtifacts

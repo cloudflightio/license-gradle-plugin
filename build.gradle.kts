@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.spdx.catalog)
     implementation(libs.json.wrapper)
     implementation(libs.httpclient)
+    implementation(libs.snakeyaml)
     implementation(libs.gradle.node.plugin)
 
     testImplementation(libs.bundles.testImplementationDependencies)
