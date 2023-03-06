@@ -8,6 +8,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.nio.file.Paths
 import kotlin.io.path.exists
 
@@ -23,9 +25,10 @@ class LicensePluginTest {
             assertThat(result2.task(":clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
         }
 
-    @Test
-    fun `clfLicenseReport is called with clean build`(): Unit =
-        licenseFixture("single-java-module") {
+    @ParameterizedTest
+    @ValueSource(strings = ["7.4.2", "7.6", "8.0.2"])
+    fun `clfLicenseReport is called with clean build`(gradleVersion: String): Unit =
+        licenseFixture("single-java-module", gradleVersion = gradleVersion) {
             val result = run("clean", "build", "clfCreateTrackerReport")
             assertThat(result.task(":clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
         }
@@ -154,7 +157,7 @@ class LicensePluginTest {
         }
 
     @Test
-    fun `android-module build`():Unit = licenseFixture("android-module") {
+    fun `android-module build`(): Unit = licenseFixture("android-module") {
         val result = runCleanBuild()
         assertThat(result.task(":app:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
