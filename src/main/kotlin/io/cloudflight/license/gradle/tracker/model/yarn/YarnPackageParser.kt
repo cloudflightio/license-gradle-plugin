@@ -18,10 +18,10 @@ internal object YarnPackageParser {
         val dependencies = yarnLockParser.getDependencies()
 
         val modules = mutableSetOf<NodeModule>()
-            getModules(packageJson.parentFile, npmPackageFile.dependencies, dependencies, modules)
+
+        getModules(packageJson.parentFile, npmPackageFile.dependencies, dependencies, modules)
 
         val licenseRecords = mutableListOf<LicenseRecord>()
-
 
         return licenseRecords.toList()
     }
@@ -81,7 +81,7 @@ internal object YarnPackageParser {
         lockFileResolution: Map<String, YarnLockParser.YarnLockEntry>,
         result: MutableSet<NodeModule>
     ) {
-        val identifier = "$packageName@npm:$declaredVersion"
+        val identifier = if (declaredVersion.startsWith("npm:")) "$packageName@$declaredVersion" else "$packageName@npm:$declaredVersion"
         val lockInfo = lockFileResolution[identifier]
         if (lockInfo != null) {
             val version = lockInfo.version
@@ -104,7 +104,7 @@ internal object YarnPackageParser {
         lockFileResolution: Map<String, YarnLockParser.YarnLockEntry>,
         result: MutableList<Artifact>, trail: List<String>
     ) {
-        val identifier = "$packageName@npm:$declaredVersion"
+        val identifier = if (declaredVersion.startsWith("npm:")) "$packageName@$declaredVersion" else "$packageName@npm:$declaredVersion"
         val lockInfo = lockFileResolution[identifier]
         if (lockInfo != null) {
             val version = lockInfo.version
