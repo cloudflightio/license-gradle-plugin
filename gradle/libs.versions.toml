@@ -1,5 +1,5 @@
 [versions]
-kotlin = "1.7.20"
+kotlin = "1.9.10"
 maven-artifact = "3.5.0"
 jupiter = "5.9.1"
 assertj = "3.23.1"
@@ -15,7 +15,7 @@ junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref 
 
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 
-spdx-catalog = { module = "io.cloudflight.license.spdx:spdx-catalog", version = "3.16.6" }
+spdx-catalog = { module = "io.cloudflight.license.spdx:spdx-catalog", version = "3.21.0" }
 json-wrapper = { module = "io.cloudflight.json:json-wrapper", version = "0.5.4" }
 
 gradle-node-plugin = { module = "com.github.node-gradle:gradle-node-plugin", version = "3.5.0" }
