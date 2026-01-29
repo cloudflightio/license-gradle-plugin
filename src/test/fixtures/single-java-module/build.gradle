@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'io.cloudflight.license-gradle-plugin'
-    id 'com.gradle.plugin-publish' version "0.18.0"
+    id 'com.gradle.plugin-publish' version "2.0.0"
 }
 
 description "Cloudflight Gradle Test"
@@ -19,5 +19,14 @@ repositories {
 dependencies {
     implementation 'io.cloudflight.json:json-wrapper:0.3.3'
     implementation 'org.brotli:dec:0.1.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.8.1")
+}
+
+// TODO: remove after upgrading to autoconfigure 1.3.0
+// ensures a JUnit version compatible with gradle 9.3 is used
+test {
+    useJUnitPlatform()
 }

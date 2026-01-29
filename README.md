@@ -22,7 +22,7 @@ by adding the following block to your `build.gradle.kts`:
 
 ````kotlin
 plugins {
-    id("io.cloudflight.license-gradle-plugin") version "1.0.3"
+    id("io.cloudflight.license-gradle-plugin") version "2.0.0"
 }
 ````
 

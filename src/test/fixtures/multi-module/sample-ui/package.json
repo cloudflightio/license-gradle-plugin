@@ -16,7 +16,7 @@
     "start": "app.js"
   },
   "engines": {
-    "node": "0.6.x"
+    "node": ">=20.0.0"
   },
   "bundledDependencies": [
     "redis"

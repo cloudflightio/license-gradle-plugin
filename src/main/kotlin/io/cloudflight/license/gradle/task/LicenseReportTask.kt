@@ -3,7 +3,11 @@ package io.cloudflight.license.gradle.task
 import com.github.gradle.node.NodeExtension
 import io.cloudflight.jsonwrapper.license.LicenseEntry
 import io.cloudflight.jsonwrapper.license.LicenseRecord
-import io.cloudflight.license.gradle.*
+import io.cloudflight.license.gradle.GradleUtils
+import io.cloudflight.license.gradle.LicenceRecordReader
+import io.cloudflight.license.gradle.LicenseDefinition
+import io.cloudflight.license.gradle.Licenses
+import io.cloudflight.license.gradle.findRuntimeProjectDependencies
 import io.cloudflight.license.gradle.npm.NpmLicenseParser
 import io.cloudflight.license.gradle.pom.PomFileResolver
 import io.cloudflight.license.gradle.pom.PomParser
@@ -16,12 +20,19 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.ResolvedArtifact
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.util.*
 
@@ -49,50 +60,46 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
 
     @InputFiles
     @Classpath
-    fun getClasspath(): Collection<File> {
-        return findRuntimeDependencies().values
+    fun getClasspath(): FileCollection {
+        val configName = GradleUtils.getRuntimeClasspathName(project)
+        return project.configurations.getByName(configName)
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     fun getOtherModules(): List<File> {
         return project.findRuntimeProjectDependencies().map {
-            File(
-                it.buildDir,
-                "licenses/license-report.json"
-            )
+            it.layout.buildDirectory.file("licenses/license-report.json").get().asFile
         }
     }
 
     @InputFile
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     fun getPackageLockJson(): Provider<RegularFile> {
-        val node = project.extensions.findByType(NodeExtension::class.java)
-        return if (node != null) {
-            node.nodeProjectDir.file(NpmLicenseParser.PACKAGE_LOCK_JSON).takeIf { it.get().asFile.exists() }?:project.provider { null }
-        } else {
-            project.provider { null }
+        val node = project.extensions.findByType(NodeExtension::class.java) ?: return project.provider { null }
+        return node.nodeProjectDir.file(NpmLicenseParser.PACKAGE_LOCK_JSON).map {
+            if (it.asFile.exists()) it else null
         }
     }
 
     @InputFile
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     fun getPackageJson(): Provider<RegularFile> {
-        val node = project.extensions.findByType(NodeExtension::class.java)
-        return if (node != null) {
-            node.nodeProjectDir.file(NpmLicenseParser.PACKAGE_JSON).takeIf { it.get().asFile.exists() }?:project.provider { null }
-        } else {
-            project.provider { null }
+        val node = project.extensions.findByType(NodeExtension::class.java) ?: return project.provider { null }
+        return node.nodeProjectDir.file(NpmLicenseParser.PACKAGE_JSON).map {
+            if (it.asFile.exists()) it else null
         }
     }
 
     @InputFile
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     fun getYarnLock(): Provider<RegularFile> {
-        val node = project.extensions.findByType(NodeExtension::class.java)
-        return if (node != null) {
-            node.nodeProjectDir.file("yarn.lock").takeIf { it.get().asFile.exists() }?:project.provider { null }
-        } else {
-            project.provider { null }
+        val node = project.extensions.findByType(NodeExtension::class.java) ?: return project.provider { null }
+        return node.nodeProjectDir.file("yarn.lock").map {
+            if (it.asFile.exists()) it else null
         }
     }
 
@@ -107,11 +114,16 @@ abstract class LicenseReportTask : DefaultTask() { // tasks can't be final
         records += findRuntimeProjects(dependencies)
         records += findLicenseReports(dependencies)
         records += findPomFiles(dependencies)
-        if (getPackageLockJson().isPresent && getPackageLockJson().get().asFile.exists()) {
-            records += npmLicenseParser.findNpmPackages(getPackageLockJson().get().asFile)
+
+        val pkgLock = getPackageLockJson().orNull?.asFile
+        if (pkgLock != null && pkgLock.exists()) {
+            records += npmLicenseParser.findNpmPackages(pkgLock)
         }
-        if (getYarnLock().isPresent && getYarnLock().get().asFile.exists()) {
-            records += YarnPackageParser.findNpmPackages(getPackageJson().get().asFile, getYarnLock().get().asFile)
+
+        val yarnLock = getYarnLock().orNull?.asFile
+        val pkgJson = getPackageJson().orNull?.asFile
+        if (yarnLock != null && yarnLock.exists() && pkgJson != null && pkgJson.exists()) {
+            records += YarnPackageParser.findNpmPackages(pkgJson, yarnLock)
         }
 
         records += findUnresolvedLicenseOverrides(dependencies)

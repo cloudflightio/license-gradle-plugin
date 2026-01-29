@@ -8,6 +8,7 @@ import io.cloudflight.jsonwrapper.tracker.BuildTool
 import io.cloudflight.jsonwrapper.tracker.Project
 import io.cloudflight.jsonwrapper.tracker.Report
 import io.cloudflight.license.gradle.GradleUtils
+import io.cloudflight.license.gradle.findRuntimeProjectDependencies
 import io.cloudflight.license.gradle.npm.NpmLicenseParser
 import io.cloudflight.license.gradle.tracker.model.npm.NpmPackageParser
 import io.cloudflight.license.gradle.tracker.model.yarn.YarnPackageParser
@@ -23,8 +24,11 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
@@ -38,26 +42,42 @@ abstract class CreateTrackerReportTask : DefaultTask() {
     @get:InputFile
     abstract val licenseFile: RegularFileProperty
 
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    fun getOtherModules(): List<File> {
+        return project.findRuntimeProjectDependencies().map {
+            it.layout.buildDirectory.file("licenses/license-report.json").get().asFile
+        }
+    }
+
     @InputFile
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     fun getPackageLockJson(): Provider<RegularFile> {
-        val node = project.extensions.findByType(NodeExtension::class.java)
-        return node?.nodeProjectDir?.file(NpmLicenseParser.PACKAGE_LOCK_JSON)?.takeIf { it.get().asFile.exists() }
-            ?: project.provider { null }
+        val node = project.extensions.findByType(NodeExtension::class.java) ?: return project.provider { null }
+        return node.nodeProjectDir.file(NpmLicenseParser.PACKAGE_LOCK_JSON).map {
+            if (it.asFile.exists()) it else null
+        }
     }
 
     @InputFile
     @Optional
-    fun getYarnLock(): Provider<RegularFile> {
-        val node = project.extensions.findByType(NodeExtension::class.java)
-        return node?.nodeProjectDir?.file("yarn.lock")?.takeIf { it.get().asFile.exists() } ?: project.provider { null }
-    }
-
-    @InputFile
-    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     fun getPackageJson(): Provider<RegularFile> {
-        val node = project.extensions.findByType(NodeExtension::class.java)
-        return node?.nodeProjectDir?.file(NpmLicenseParser.PACKAGE_JSON) ?: project.provider { null }
+        val node = project.extensions.findByType(NodeExtension::class.java) ?: return project.provider { null }
+        return node.nodeProjectDir.file(NpmLicenseParser.PACKAGE_JSON).map {
+            if (it.asFile.exists()) it else null
+        }
+    }
+
+    @InputFile
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    fun getYarnLock(): Provider<RegularFile> {
+        val node = project.extensions.findByType(NodeExtension::class.java) ?: return project.provider { null }
+        return node.nodeProjectDir.file("yarn.lock").map {
+            if (it.asFile.exists()) it else null
+        }
     }
 
     @Suppress("ComplexCondition")

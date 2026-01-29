@@ -26,7 +26,7 @@ class LicensePluginTest {
         }
 
     @ParameterizedTest
-    @ValueSource(strings = ["7.4.2", "7.6", "8.0.2"])
+    @ValueSource(strings = ["8.5", "8.14.4", "9.0.0", "9.3.0"])
     fun `clfLicenseReport is called with clean build`(gradleVersion: String): Unit =
         licenseFixture("single-java-module", gradleVersion = gradleVersion) {
             val result = run("clean", "build", "clfCreateTrackerReport")
@@ -76,8 +76,6 @@ class LicensePluginTest {
 
             assertThat(result.normalizedOutput).doesNotContain("Execution optimizations have been disabled for task")
 
-            println(result.normalizedOutput)
-
             val dependenciesOfUi =
                 Report.readFromFile(this.fixtureDir.resolve("sample-ui/build/tracker/dependencies.json").toFile())
 
@@ -98,11 +96,11 @@ class LicensePluginTest {
             }
 
             val result = run("clean", ":sample-server:clfLicenseReport")
-            println(result.normalizedOutput)
-            assertThat(result.task(":sample-server:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-            assertThat(result.task(":sample-ui:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
             assertThat(result.task(":sample-ui:npmInstall")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":sample-ui:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":sample-api:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(result.task(":sample-server:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
             val licenseReport = fixtureDir.resolve("sample-server/build/licenses/license-report.json")
             assertThat(licenseReport).exists()
@@ -112,8 +110,8 @@ class LicensePluginTest {
             assertThat(licenseEntry?.licenses).isNotEmpty
 
             val result2 = run(":sample-server:clfLicenseReport")
+            assertThat(result2.task(":sample-ui:npmInstall")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result2.task(":sample-ui:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
-            assertThat(result2.task(":sample-ui:npmInstall")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
             assertThat(result2.task(":sample-api:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
             assertThat(result2.task(":sample-server:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
         }
@@ -127,7 +125,7 @@ class LicensePluginTest {
             }
 
             val result = run("clean", "clfCreateTrackerReport")
-            println(result.normalizedOutput)
+
             assertThat(result.normalizedOutput).doesNotContain("license can't be parsed")
             assertThat(result.task(":sample-server:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":sample-ui:clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
@@ -145,7 +143,7 @@ class LicensePluginTest {
     fun `test-suite dependencies are collected correctly`(): Unit =
         licenseFixture("single-suite-module") {
             val result = run("clean", "clfCreateTrackerReport")
-            println(result.normalizedOutput)
+
             assertThat(result.normalizedOutput).doesNotContain("license can't be parsed")
             assertThat(result.task(":clfLicenseReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
             assertThat(result.task(":clfCreateTrackerReport")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
@@ -176,8 +174,7 @@ class LicensePluginTest {
     @Test
     fun `developmentOnly configurations are handled correctly`(): Unit =
         licenseFixture("micronaut-test-resources-spring") {
-            val result = run("clean", "build", "bootJar", "clfLicenseReport", "clfCreateTrackerReport")
-            println(result.normalizedOutput)
+            run("clean", "build", "bootJar", "clfLicenseReport", "clfCreateTrackerReport", "--stacktrace", "--info")
 
             val dependenciesOfApp =
                 Report.readFromFile(this.fixtureDir.resolve("build/tracker/dependencies.json").toFile())
@@ -191,8 +188,8 @@ class LicensePluginTest {
     @Test
     fun `parse npm projects`(): Unit =
         licenseFixture("single-ts-module") {
-            val result = run("clfCreateTrackerReport")
-            println(result.normalizedOutput)
+            run("clfCreateTrackerReport")
+
 
             val dependenciesOfApp =
                 Report.readFromFile(this.fixtureDir.resolve("build/tracker/dependencies.json").toFile())
@@ -204,10 +201,9 @@ class LicensePluginTest {
     @Test
     fun `parse yarn projects`(): Unit =
         licenseFixture("single-ts-module-yarn") {
-            val result = run("yarn", "clfLicenseReport","clfCreateTrackerReport")
+            run("yarn", "clfLicenseReport", "clfCreateTrackerReport")
 
             assertThat(this.fixtureDir.resolve("package-lock.json")).doesNotExist()
-            println(result.normalizedOutput)
 
             val dependenciesOfApp =
                 Report.readFromFile(this.fixtureDir.resolve("build/tracker/dependencies.json").toFile())
@@ -221,6 +217,6 @@ class LicensePluginTest {
 private fun <T : Any> licenseFixture(
     fixtureName: String,
     gradleVersion: String? = null,
-    testWork: ProjectFixture.() -> T
+    testWork: ProjectFixture.() -> T,
 ): T =
     useFixture(Paths.get(""), fixtureName, gradleVersion, testWork)
