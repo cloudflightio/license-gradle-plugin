@@ -1,8 +1,8 @@
 plugins {
     id("java")
     id("io.cloudflight.license-gradle-plugin")
-    id("io.micronaut.test-resources") version "3.7.0"
-    id("org.springframework.boot") version "3.0.1"
+    id("io.micronaut.test-resources") version "3.7.10"
+    id("org.springframework.boot") version "3.5.7"
 }
 
 version = "0.0.1"
@@ -19,8 +19,8 @@ java {
 }
 
 dependencies {
-    implementation(platform("io.cloudflight.platform.spring:platform-spring-bom:2.0.0-rc.1"))
-    testImplementation(platform("io.cloudflight.platform.spring:platform-spring-test-bom:2.0.0-rc.1"))
+    implementation(platform("io.cloudflight.platform.spring:platform-spring-bom:2.4.10"))
+    testImplementation(platform("io.cloudflight.platform.spring:platform-spring-test-bom:2.4.10"))
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
@@ -34,5 +34,5 @@ dependencies {
     testImplementation("io.cloudflight.platform.spring:platform-spring-test-jpa")
     testImplementation("io.cloudflight.platform.spring:platform-spring-test-testcontainers")
 
-    testResourcesImplementation("io.cloudflight.testresources.springboot:springboot-testresources-jdbc-mariadb:0.1.2")
+    testResourcesImplementation("io.cloudflight.testresources.springboot:springboot-testresources-jdbc-mariadb:0.6.0")
 }

@@ -27,6 +27,7 @@ internal class ProjectFixture(fixtureBaseDir: Path, val fixtureName: String, val
             .withProjectDir(fixtureDir.toFile())
             .withPluginClasspath()
             .withArguments(first, *tasks)
+            .forwardOutput()
 
         if (gradleVersion != null) {
             runner = runner.withGradleVersion(gradleVersion)

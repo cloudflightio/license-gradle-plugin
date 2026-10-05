@@ -85,4 +85,4 @@ fun Project.findRuntimeProjectDependencies() = configurations
         .getByName(GradleUtils.getRuntimeClasspathName(this))
         .allDependencies
         .filterIsInstance<ProjectDependency>()
-        .map { it.dependencyProject }
+        .mapNotNull { findProject(it.path) }
